@@ -624,6 +624,67 @@
 </head>
 <body>
 
+<!-- Tela de Senha -->
+<div id="loginScreen" style="
+    position: fixed; inset: 0; z-index: 9999;
+    background: #0a0a0a;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 24px;
+">
+    <div style="
+        background: #111; border: 1px solid #222; border-radius: 16px;
+        padding: 40px; max-width: 380px; width: 90%; text-align: center;
+    ">
+        <div style="
+            width: 56px; height: 56px; background: #a8ff00; border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 900; font-size: 24px; color: #000; margin: 0 auto 20px;
+        ">Z</div>
+        <h2 style="font-family: 'Inter', sans-serif; color: #fff; font-size: 20px; margin-bottom: 6px;">ZUCK KPIs</h2>
+        <p style="font-family: 'Inter', sans-serif; color: #555; font-size: 13px; margin-bottom: 24px;">Digite a senha para acessar o dashboard</p>
+        <input id="passInput" type="password" placeholder="Senha" autocomplete="off" style="
+            width: 100%; padding: 14px 16px; border-radius: 10px;
+            border: 1px solid #333; background: #1a1a1a; color: #fff;
+            font-family: 'Inter', sans-serif; font-size: 15px; outline: none;
+            transition: border-color 0.2s;
+        " onfocus="this.style.borderColor='#a8ff00'" onblur="this.style.borderColor='#333'">
+        <div id="passError" style="
+            color: #ff4444; font-family: 'Inter', sans-serif; font-size: 12px;
+            margin-top: 8px; display: none;
+        ">Senha incorreta</div>
+        <button onclick="checkPass()" style="
+            width: 100%; padding: 14px; border-radius: 10px; border: none;
+            background: #a8ff00; color: #000; font-family: 'Inter', sans-serif;
+            font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 16px;
+            transition: opacity 0.2s;
+        " onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">Entrar</button>
+    </div>
+</div>
+<script>
+    const PASS_HASH = '4f25ef8721a434d48eede01d5341cdccde05f4c1c3d0e241b91f8a75ee717e4e';
+    async function sha256(text) {
+        const data = new TextEncoder().encode(text);
+        const hash = await crypto.subtle.digest('SHA-256', data);
+        return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+    async function checkPass() {
+        const input = document.getElementById('passInput').value;
+        const hash = await sha256(input);
+        if (hash === PASS_HASH) {
+            document.getElementById('loginScreen').style.display = 'none';
+            sessionStorage.setItem('zuck_auth', hash);
+        } else {
+            document.getElementById('passError').style.display = 'block';
+            document.getElementById('passInput').style.borderColor = '#ff4444';
+        }
+    }
+    document.addEventListener('keydown', e => { if (e.key === 'Enter' && document.getElementById('loginScreen').style.display !== 'none') checkPass(); });
+    // Auto-login se ja autenticou nesta sessao
+    if (sessionStorage.getItem('zuck_auth') === PASS_HASH) {
+        document.getElementById('loginScreen').style.display = 'none';
+    }
+</script>
+
 <div class="header">
     <div class="header-left">
         <div class="logo">Z</div>
