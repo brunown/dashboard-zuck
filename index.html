@@ -268,36 +268,43 @@
             padding: 10px 0;
         }
 
-        .funnel-step {
-            position: relative;
-            display: flex;
+        /* Funnel - each row is full width grid, bar is visual only */
+        .funnel-row {
+            display: grid;
+            grid-template-columns: 40px 1fr auto auto;
             align-items: center;
-            justify-content: space-between;
-            padding: 14px 24px;
+            gap: 14px;
+            padding: 12px 20px;
             border-radius: 12px;
             transition: all 0.3s ease;
             background: linear-gradient(135deg, rgba(168,255,0,0.06) 0%, rgba(168,255,0,0.02) 100%);
             border: 1px solid rgba(168,255,0,0.08);
+            position: relative;
+            overflow: hidden;
         }
 
-        .funnel-step:hover {
-            background: linear-gradient(135deg, rgba(168,255,0,0.12) 0%, rgba(168,255,0,0.04) 100%);
-            border-color: rgba(168,255,0,0.2);
-            transform: scale(1.01);
+        .funnel-row::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 0; bottom: 0;
+            width: var(--bar-width, 100%);
+            background: linear-gradient(90deg, rgba(168,255,0,0.12) 0%, transparent 100%);
+            pointer-events: none;
+            transition: width 0.8s ease;
         }
 
-        .funnel-step.highlight {
-            background: linear-gradient(135deg, rgba(168,255,0,0.14) 0%, rgba(168,255,0,0.04) 100%);
+        .funnel-row:hover {
+            border-color: rgba(168,255,0,0.25);
+            background: linear-gradient(135deg, rgba(168,255,0,0.1) 0%, rgba(168,255,0,0.03) 100%);
+        }
+
+        .funnel-row.highlight {
             border-color: var(--lime);
             box-shadow: 0 0 24px rgba(168,255,0,0.1), inset 0 0 30px rgba(168,255,0,0.03);
         }
 
-        .funnel-step-left {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            flex: 1;
-            min-width: 0;
+        .funnel-row.highlight::before {
+            background: linear-gradient(90deg, rgba(168,255,0,0.18) 0%, transparent 100%);
         }
 
         .funnel-icon {
@@ -311,9 +318,10 @@
             flex-shrink: 0;
             background: rgba(168,255,0,0.1);
             border: 1px solid rgba(168,255,0,0.15);
+            z-index: 1;
         }
 
-        .funnel-step.highlight .funnel-icon {
+        .funnel-row.highlight .funnel-icon {
             background: rgba(168,255,0,0.2);
             border-color: var(--lime);
         }
@@ -321,7 +329,7 @@
         .funnel-label-group {
             display: flex;
             flex-direction: column;
-            min-width: 0;
+            z-index: 1;
         }
 
         .funnel-label {
@@ -338,19 +346,15 @@
             margin-top: 2px;
         }
 
-        .funnel-step-right {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            flex-shrink: 0;
-        }
-
         .funnel-value {
             font-size: 28px;
             font-weight: 800;
             color: var(--lime);
             letter-spacing: -1px;
             line-height: 1;
+            z-index: 1;
+            text-align: right;
+            padding-left: 12px;
         }
 
         .funnel-rate {
@@ -363,9 +367,10 @@
             border: 1px solid rgba(168,255,0,0.15);
             min-width: 52px;
             text-align: center;
+            z-index: 1;
         }
 
-        .funnel-step.highlight .funnel-rate {
+        .funnel-row.highlight .funnel-rate {
             background: rgba(168,255,0,0.2);
             border-color: var(--lime);
             color: var(--lime);
@@ -375,7 +380,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            height: 28px;
+            height: 24px;
             position: relative;
         }
 
@@ -1176,21 +1181,16 @@ function renderFunnel(t) {
     let html = '';
 
     steps.forEach((step, i) => {
-        // Width ranges from 100% (max) to 50% (min) for visual funnel effect
-        const widthPct = 50 + (step.value / maxVal) * 50;
+        const barPct = Math.max((step.value / maxVal) * 100, 8);
         html += `
-            <div class="funnel-step${step.highlight ? ' highlight' : ''}" style="width:${widthPct}%">
-                <div class="funnel-step-left">
-                    <div class="funnel-icon">${icons[i]}</div>
-                    <div class="funnel-label-group">
-                        <div class="funnel-label">${step.label}</div>
-                        ${step.sub ? `<div class="funnel-sub">${step.sub}</div>` : ''}
-                    </div>
+            <div class="funnel-row${step.highlight ? ' highlight' : ''}" style="--bar-width:${barPct}%">
+                <div class="funnel-icon">${icons[i]}</div>
+                <div class="funnel-label-group">
+                    <div class="funnel-label">${step.label}</div>
+                    ${step.sub ? `<div class="funnel-sub">${step.sub}</div>` : ''}
                 </div>
-                <div class="funnel-step-right">
-                    <div class="funnel-value">${step.value}</div>
-                    ${step.rate ? `<div class="funnel-rate">${step.rate}</div>` : ''}
-                </div>
+                <div class="funnel-value">${step.value}</div>
+                ${step.rate ? `<div class="funnel-rate">${step.rate}</div>` : '<div></div>'}
             </div>
         `;
         if (i < steps.length - 1) {
