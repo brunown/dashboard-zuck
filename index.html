@@ -268,68 +268,81 @@
             padding: 10px 0;
         }
 
-        /* Funnel - each row is full width grid, bar is visual only */
         .funnel-row {
-            display: grid;
-            grid-template-columns: 40px 1fr auto auto;
+            display: flex;
             align-items: center;
+            justify-content: center;
             gap: 14px;
-            padding: 12px 20px;
-            border-radius: 12px;
+            padding: 14px 24px;
+            border-radius: 14px;
             transition: all 0.3s ease;
-            background: linear-gradient(135deg, rgba(168,255,0,0.06) 0%, rgba(168,255,0,0.02) 100%);
-            border: 1px solid rgba(168,255,0,0.08);
             position: relative;
             overflow: hidden;
+            /* Trapezoid shape via clip-path */
+            clip-path: polygon(
+                var(--inset) 0%,
+                calc(100% - var(--inset)) 0%,
+                calc(100% - var(--inset-bot)) 100%,
+                var(--inset-bot) 100%
+            );
+            background: linear-gradient(180deg, rgba(168,255,0,0.10) 0%, rgba(168,255,0,0.03) 100%);
+            width: 100%;
         }
 
         .funnel-row::before {
             content: '';
             position: absolute;
-            left: 0; top: 0; bottom: 0;
-            width: var(--bar-width, 100%);
-            background: linear-gradient(90deg, rgba(168,255,0,0.12) 0%, transparent 100%);
+            inset: 0;
+            border-radius: 14px;
+            background: linear-gradient(135deg, rgba(168,255,0,0.08) 0%, transparent 70%);
             pointer-events: none;
-            transition: width 0.8s ease;
         }
 
         .funnel-row:hover {
-            border-color: rgba(168,255,0,0.25);
-            background: linear-gradient(135deg, rgba(168,255,0,0.1) 0%, rgba(168,255,0,0.03) 100%);
+            background: linear-gradient(180deg, rgba(168,255,0,0.16) 0%, rgba(168,255,0,0.05) 100%);
         }
 
         .funnel-row.highlight {
-            border-color: var(--lime);
-            box-shadow: 0 0 24px rgba(168,255,0,0.1), inset 0 0 30px rgba(168,255,0,0.03);
+            background: linear-gradient(180deg, rgba(168,255,0,0.18) 0%, rgba(168,255,0,0.06) 100%);
         }
 
-        .funnel-row.highlight::before {
-            background: linear-gradient(90deg, rgba(168,255,0,0.18) 0%, transparent 100%);
+        /* Outline layer (clip-path doesn't support border) */
+        .funnel-outline {
+            width: 100%;
+            padding: 1px;
+            clip-path: polygon(
+                var(--inset) 0%,
+                calc(100% - var(--inset)) 0%,
+                calc(100% - var(--inset-bot)) 100%,
+                var(--inset-bot) 100%
+            );
+            background: linear-gradient(180deg, rgba(168,255,0,0.2) 0%, rgba(168,255,0,0.06) 100%);
+        }
+
+        .funnel-outline.highlight {
+            background: linear-gradient(180deg, var(--lime) 0%, rgba(168,255,0,0.3) 100%);
+            filter: drop-shadow(0 0 12px rgba(168,255,0,0.15));
         }
 
         .funnel-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
+            font-size: 17px;
             flex-shrink: 0;
-            background: rgba(168,255,0,0.1);
-            border: 1px solid rgba(168,255,0,0.15);
+            background: rgba(168,255,0,0.12);
             z-index: 1;
-        }
-
-        .funnel-row.highlight .funnel-icon {
-            background: rgba(168,255,0,0.2);
-            border-color: var(--lime);
         }
 
         .funnel-label-group {
             display: flex;
             flex-direction: column;
             z-index: 1;
+            flex: 1;
+            min-width: 0;
         }
 
         .funnel-label {
@@ -343,7 +356,7 @@
             font-size: 11px;
             color: var(--text-secondary);
             font-weight: 400;
-            margin-top: 2px;
+            margin-top: 1px;
         }
 
         .funnel-value {
@@ -353,52 +366,33 @@
             letter-spacing: -1px;
             line-height: 1;
             z-index: 1;
-            text-align: right;
-            padding-left: 12px;
+            flex-shrink: 0;
         }
 
         .funnel-rate {
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 700;
             color: var(--text-primary);
-            background: rgba(168,255,0,0.12);
-            padding: 6px 12px;
+            background: rgba(0,0,0,0.35);
+            padding: 5px 10px;
             border-radius: 20px;
-            border: 1px solid rgba(168,255,0,0.15);
-            min-width: 52px;
+            min-width: 46px;
             text-align: center;
             z-index: 1;
+            flex-shrink: 0;
         }
 
         .funnel-row.highlight .funnel-rate {
-            background: rgba(168,255,0,0.2);
-            border-color: var(--lime);
             color: var(--lime);
+            background: rgba(0,0,0,0.5);
         }
 
         .funnel-connector {
             display: flex;
             align-items: center;
             justify-content: center;
-            height: 24px;
+            height: 6px;
             position: relative;
-        }
-
-        .funnel-connector::before {
-            content: '';
-            position: absolute;
-            width: 2px;
-            height: 100%;
-            background: linear-gradient(180deg, rgba(168,255,0,0.3) 0%, rgba(168,255,0,0.08) 100%);
-        }
-
-        .funnel-connector-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--lime);
-            opacity: 0.4;
-            z-index: 1;
         }
 
         /* Comparativo Closers */
@@ -1177,24 +1171,31 @@ function renderFunnel(t) {
         { label: 'Vendas', value: t.vendas, rate: t.pctVendas, highlight: true }
     ];
 
-    const maxVal = Math.max(...steps.map(s => s.value), 1);
+    const total = steps.length;
     let html = '';
 
     steps.forEach((step, i) => {
-        const barPct = Math.max((step.value / maxVal) * 100, 8);
+        // Each step: top inset and bottom inset create trapezoid
+        // Top of first = 0%, bottom of last = ~18%
+        const insetTop = (i / total) * 18;
+        const insetBot = ((i + 1) / total) * 18;
+        const hl = step.highlight ? ' highlight' : '';
+
         html += `
-            <div class="funnel-row${step.highlight ? ' highlight' : ''}" style="--bar-width:${barPct}%">
-                <div class="funnel-icon">${icons[i]}</div>
-                <div class="funnel-label-group">
-                    <div class="funnel-label">${step.label}</div>
-                    ${step.sub ? `<div class="funnel-sub">${step.sub}</div>` : ''}
+            <div class="funnel-outline${hl}" style="--inset:${insetTop}%;--inset-bot:${insetBot}%">
+                <div class="funnel-row${hl}" style="--inset:${insetTop}%;--inset-bot:${insetBot}%">
+                    <div class="funnel-icon">${icons[i]}</div>
+                    <div class="funnel-label-group">
+                        <div class="funnel-label">${step.label}</div>
+                        ${step.sub ? `<div class="funnel-sub">${step.sub}</div>` : ''}
+                    </div>
+                    <div class="funnel-value">${step.value}</div>
+                    ${step.rate ? `<div class="funnel-rate">${step.rate}</div>` : ''}
                 </div>
-                <div class="funnel-value">${step.value}</div>
-                ${step.rate ? `<div class="funnel-rate">${step.rate}</div>` : '<div></div>'}
             </div>
         `;
         if (i < steps.length - 1) {
-            html += `<div class="funnel-connector"><div class="funnel-connector-dot"></div></div>`;
+            html += `<div class="funnel-connector"></div>`;
         }
     });
 
