@@ -1,0 +1,1330 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZUCK KPIs FLM 2026</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+        :root {
+            --lime: #a8ff00;
+            --lime-dark: #7acc00;
+            --lime-dim: #4a7a00;
+            --lime-glow: rgba(168, 255, 0, 0.15);
+            --lime-glow-strong: rgba(168, 255, 0, 0.3);
+            --bg-primary: #0a0a0a;
+            --bg-card: #111111;
+            --bg-card-hover: #1a1a1a;
+            --border: #222222;
+            --border-lime: rgba(168, 255, 0, 0.2);
+            --text-primary: #ffffff;
+            --text-secondary: #888888;
+            --text-dim: #555555;
+            --red: #ff4444;
+            --green: #00ff88;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .header {
+            padding: 24px 32px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(180deg, rgba(168,255,0,0.03) 0%, transparent 100%);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo {
+            width: 40px;
+            height: 40px;
+            background: var(--lime);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 18px;
+            color: #000;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .header h1 span {
+            color: var(--lime);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .refresh-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 13px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .refresh-btn:hover {
+            border-color: var(--lime);
+            color: var(--lime);
+            background: var(--lime-glow);
+        }
+
+        .last-update {
+            font-size: 12px;
+            color: var(--text-dim);
+        }
+
+        .month-tabs {
+            display: flex;
+            gap: 4px;
+            padding: 16px 32px;
+            border-bottom: 1px solid var(--border);
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+
+        .month-tabs::-webkit-scrollbar { display: none; }
+
+        .month-tab {
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+
+        .month-tab:hover:not(.disabled) {
+            border-color: var(--lime);
+            color: var(--lime);
+        }
+
+        .month-tab.active {
+            background: var(--lime);
+            color: #000;
+            border-color: var(--lime);
+            font-weight: 700;
+        }
+
+        .month-tab.disabled {
+            opacity: 0.25;
+            cursor: not-allowed;
+            color: var(--text-dim);
+        }
+
+        .dashboard {
+            padding: 24px 32px;
+            max-width: 1440px;
+            margin: 0 auto;
+        }
+
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 60vh;
+            gap: 16px;
+        }
+
+        .loading .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: var(--lime);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .loading p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        /* KPI Cards Row */
+        .kpi-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .kpi-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.2s;
+        }
+
+        .kpi-card:hover {
+            border-color: var(--border-lime);
+            background: var(--bg-card-hover);
+        }
+
+        .kpi-card.highlight {
+            border-color: var(--lime);
+            background: linear-gradient(135deg, rgba(168,255,0,0.05) 0%, transparent 100%);
+        }
+
+        .kpi-label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .kpi-value {
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: -1px;
+            color: var(--text-primary);
+        }
+
+        .kpi-card.highlight .kpi-value {
+            color: var(--lime);
+        }
+
+        .kpi-sub {
+            font-size: 12px;
+            color: var(--text-dim);
+            margin-top: 4px;
+        }
+
+        /* Sections */
+        .section-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .section-grid.full {
+            grid-template-columns: 1fr;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .card-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Funnel */
+        .funnel-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0;
+            padding: 10px 0;
+        }
+
+        .funnel-step {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 24px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, rgba(168,255,0,0.06) 0%, rgba(168,255,0,0.02) 100%);
+            border: 1px solid rgba(168,255,0,0.08);
+        }
+
+        .funnel-step:hover {
+            background: linear-gradient(135deg, rgba(168,255,0,0.12) 0%, rgba(168,255,0,0.04) 100%);
+            border-color: rgba(168,255,0,0.2);
+            transform: scale(1.01);
+        }
+
+        .funnel-step.highlight {
+            background: linear-gradient(135deg, rgba(168,255,0,0.14) 0%, rgba(168,255,0,0.04) 100%);
+            border-color: var(--lime);
+            box-shadow: 0 0 24px rgba(168,255,0,0.1), inset 0 0 30px rgba(168,255,0,0.03);
+        }
+
+        .funnel-step-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .funnel-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+            background: rgba(168,255,0,0.1);
+            border: 1px solid rgba(168,255,0,0.15);
+        }
+
+        .funnel-step.highlight .funnel-icon {
+            background: rgba(168,255,0,0.2);
+            border-color: var(--lime);
+        }
+
+        .funnel-label-group {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .funnel-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            white-space: nowrap;
+        }
+
+        .funnel-sub {
+            font-size: 11px;
+            color: var(--text-secondary);
+            font-weight: 400;
+            margin-top: 2px;
+        }
+
+        .funnel-step-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-shrink: 0;
+        }
+
+        .funnel-value {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--lime);
+            letter-spacing: -1px;
+            line-height: 1;
+        }
+
+        .funnel-rate {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-primary);
+            background: rgba(168,255,0,0.12);
+            padding: 6px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(168,255,0,0.15);
+            min-width: 52px;
+            text-align: center;
+        }
+
+        .funnel-step.highlight .funnel-rate {
+            background: rgba(168,255,0,0.2);
+            border-color: var(--lime);
+            color: var(--lime);
+        }
+
+        .funnel-connector {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 28px;
+            position: relative;
+        }
+
+        .funnel-connector::before {
+            content: '';
+            position: absolute;
+            width: 2px;
+            height: 100%;
+            background: linear-gradient(180deg, rgba(168,255,0,0.3) 0%, rgba(168,255,0,0.08) 100%);
+        }
+
+        .funnel-connector-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--lime);
+            opacity: 0.4;
+            z-index: 1;
+        }
+
+        /* Comparativo Closers */
+        .closers-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .closer-card {
+            border-radius: 12px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .closer-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 12px;
+            padding: 1px;
+            background: linear-gradient(135deg, var(--closer-color) 0%, transparent 60%);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+        }
+
+        .closer-card-bg {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, var(--closer-bg) 0%, var(--bg-card) 60%);
+            border-radius: 12px;
+            z-index: 0;
+        }
+
+        .closer-card > *:not(.closer-card-bg) { position: relative; z-index: 1; }
+
+        .closer-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .closer-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 14px;
+            color: #000;
+        }
+
+        .closer-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .closer-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .closer-stat {
+            text-align: center;
+            padding: 10px 8px;
+            background: rgba(0,0,0,0.25);
+            border-radius: 8px;
+        }
+
+        .closer-stat-value {
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .closer-stat-label {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        .closer-taxa {
+            margin-top: 12px;
+            text-align: center;
+            padding: 8px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            background: rgba(0,0,0,0.25);
+        }
+
+        .closer-taxa span {
+            font-size: 20px;
+            font-weight: 800;
+        }
+
+        /* Chart container */
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        /* Cost cards */
+        .cost-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .cost-card {
+            background: rgba(168,255,0,0.03);
+            border: 1px solid rgba(168,255,0,0.1);
+            border-radius: 10px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .cost-card .cost-label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .cost-card .cost-value {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--lime);
+        }
+
+        /* Daily table */
+        .daily-table-wrapper {
+            max-height: 400px;
+            overflow-y: auto;
+            border-radius: 8px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--lime-dim) var(--bg-card);
+        }
+
+        .daily-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .daily-table thead {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+
+        .daily-table th {
+            background: var(--bg-primary);
+            text-align: right;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            color: var(--text-dim);
+            padding: 10px 8px;
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+
+        .daily-table th:first-child { text-align: left; }
+
+        .daily-table td {
+            padding: 8px;
+            text-align: right;
+            border-bottom: 1px solid rgba(255,255,255,0.02);
+            color: var(--text-secondary);
+        }
+
+        .daily-table td:first-child {
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .daily-table tr:hover td {
+            background: rgba(168,255,0,0.03);
+        }
+
+        .daily-table tr.total-row td {
+            font-weight: 800;
+            color: var(--lime);
+            border-top: 2px solid var(--lime);
+            background: rgba(168,255,0,0.05);
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .section-grid { grid-template-columns: 1fr; }
+            .kpi-row { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+            .header, .month-tabs, .dashboard { padding-left: 16px; padding-right: 16px; }
+            .cost-grid { grid-template-columns: 1fr; }
+        }
+
+        /* No data */
+        .no-data {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 60vh;
+            gap: 12px;
+            color: var(--text-secondary);
+        }
+
+        .no-data svg {
+            width: 48px;
+            height: 48px;
+            opacity: 0.3;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="header-left">
+        <div class="logo">Z</div>
+        <h1><span>ZUCK</span> KPIs FLM 2026</h1>
+    </div>
+    <div class="header-right">
+        <span class="last-update" id="lastUpdate"></span>
+        <button class="refresh-btn" onclick="refreshData()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+            Atualizar
+        </button>
+    </div>
+</div>
+
+<div class="month-tabs" id="monthTabs"></div>
+
+<div class="dashboard" id="dashboard">
+    <div class="loading" id="loadingState">
+        <div class="spinner"></div>
+        <p>Carregando dados da planilha...</p>
+    </div>
+</div>
+
+<script>
+const SHEET_ID = '1MJCt7y4h7o0y6CfB7vXxpNaAwrHe1BEA8uDzmpWScCY';
+const MONTHS = [
+    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+];
+
+// Use gid-based approach: gid=0 is first sheet, gid=1 is second, etc.
+let allData = {};
+let activeMonth = null;
+let chartInstances = {};
+
+// JSONP fetch to bypass CORS - returns { rows, sig } or null
+let jsonpCounter = 0;
+function fetchSheetJsonp(sheetName) {
+    return new Promise((resolve) => {
+        const cbName = '_gvizCb' + (jsonpCounter++);
+        const script = document.createElement('script');
+        const timeout = setTimeout(() => {
+            cleanup();
+            resolve(null);
+        }, 8000);
+
+        function cleanup() {
+            clearTimeout(timeout);
+            delete window[cbName];
+            if (script.parentNode) script.parentNode.removeChild(script);
+        }
+
+        window[cbName] = function(response) {
+            cleanup();
+            try {
+                if (response && response.status === 'ok' && response.table) {
+                    const rows = [];
+                    const header = response.table.cols.map(c => c.label || '');
+                    rows.push(header);
+                    for (const row of response.table.rows) {
+                        const cells = row.c.map(cell => {
+                            if (!cell) return '';
+                            if (cell.f) return cell.f;
+                            if (cell.v !== null && cell.v !== undefined) return String(cell.v);
+                            return '';
+                        });
+                        rows.push(cells);
+                    }
+                    resolve({ rows, sig: response.sig || '' });
+                } else {
+                    resolve(null);
+                }
+            } catch(e) {
+                console.error('JSONP parse error:', e);
+                resolve(null);
+            }
+        };
+
+        script.src = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=responseHandler:${cbName}&sheet=${encodeURIComponent(sheetName)}`;
+        document.body.appendChild(script);
+    });
+}
+
+function parseBRL(str) {
+    if (!str) return 0;
+    return parseFloat(str.replace(/R\$\s?/g, '').replace(/\./g, '').replace(',', '.')) || 0;
+}
+
+function formatBRL(num) {
+    return 'R$ ' + num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function parsePercent(str) {
+    if (!str) return 0;
+    return parseFloat(str.replace('%', '').replace(',', '.')) || 0;
+}
+
+function processSheetData(rows) {
+    if (rows.length < 2) return null;
+    const header = rows[0];
+    const dailyData = [];
+    let totals = null;
+    let financials = {};
+
+    // Find where daily data ends (row with empty date but has totals)
+    for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        const date = row[0]?.trim();
+        const leads = row[1]?.trim();
+
+        if (date && leads) {
+            dailyData.push({
+                data: date,
+                leadsGerados: parseInt(leads) || 0,
+                pctMQL: row[2]?.trim() || '0%',
+                mql: parseInt(row[3]) || 0,
+                pctLenha: row[4]?.trim() || '0%',
+                lenha: parseInt(row[5]) || 0,
+                pctAgendamento: row[6]?.trim() || '0%',
+                reunioesAgLucas: parseInt(row[7]) || 0,
+                reunioesAgMateus: parseInt(row[8]) || 0,
+                totalReunioesAg: parseInt(row[9]) || 0,
+                pctReunioesRealizadas: row[10]?.trim() || '0%',
+                reunioesReLucas: parseInt(row[11]) || 0,
+                reunioesReMateus: parseInt(row[12]) || 0,
+                totalReunioesRe: parseInt(row[13]) || 0,
+                pctVendas: row[14]?.trim() || '0%',
+                vendas: parseInt(row[15]) || 0,
+                investimento: row[16]?.trim() || '',
+                cpl: row[17]?.trim() || '',
+                cmql: row[18]?.trim() || '',
+                clenha: row[19]?.trim() || ''
+            });
+        } else if (!date && leads) {
+            // Totals row
+            totals = {
+                leadsGerados: parseInt(leads) || 0,
+                pctMQL: row[2]?.trim() || '0%',
+                mql: parseInt(row[3]) || 0,
+                pctLenha: row[4]?.trim() || '0%',
+                lenha: parseInt(row[5]) || 0,
+                pctAgendamento: row[6]?.trim() || '0%',
+                reunioesAgLucas: parseInt(row[7]) || 0,
+                reunioesAgMateus: parseInt(row[8]) || 0,
+                totalReunioesAg: parseInt(row[9]) || 0,
+                pctReunioesRealizadas: row[10]?.trim() || '0%',
+                reunioesReLucas: parseInt(row[11]) || 0,
+                reunioesReMateus: parseInt(row[12]) || 0,
+                totalReunioesRe: parseInt(row[13]) || 0,
+                pctVendas: row[14]?.trim() || '0%',
+                vendas: parseInt(row[15]) || 0,
+                investimento: row[16]?.trim() || '',
+                cpl: row[17]?.trim() || '',
+                cmql: row[18]?.trim() || '',
+                clenha: row[19]?.trim() || ''
+            };
+        } else if (!date && !leads && row[15]?.trim()) {
+            // Financial rows below totals
+            // They appear in order: Investimento, Faturamento, ROAS, Tiquete Médio, CAC
+            const val = row[15].trim();
+            if (!financials.investimento) financials.investimento = val;
+            else if (!financials.faturamento) financials.faturamento = val;
+            else if (!financials.roas) financials.roas = val;
+            else if (!financials.tiqueteMedio) financials.tiqueteMedio = val;
+            else if (!financials.cac) financials.cac = val;
+        }
+    }
+
+    if (!totals && dailyData.length === 0) return null;
+
+    return { dailyData, totals, financials };
+}
+
+async function fetchSheet(sheetName) {
+    try {
+        const result = await fetchSheetJsonp(sheetName);
+        if (!result) return null;
+        const data = processSheetData(result.rows);
+        if (data) data._sig = result.sig;
+        return data;
+    } catch (e) {
+        console.error(`Error fetching ${sheetName}:`, e);
+        return null;
+    }
+}
+
+function detectMonth(data) {
+    if (!data || !data.dailyData || data.dailyData.length === 0) return null;
+    const firstDate = data.dailyData[0].data;
+    const parts = firstDate.split('/');
+    if (parts.length === 2) return parseInt(parts[1]) - 1; // 0-indexed month
+    return null;
+}
+
+// Sheet naming pattern: "MES.26 KPIs - VENDAS"
+const MONTH_CODES = [
+    'JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN',
+    'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'
+];
+
+function getSheetNames(monthIdx) {
+    const code = MONTH_CODES[monthIdx];
+    const year = '26';
+    return [
+        `${code}.${year} KPIs - VENDAS`,
+        `${code}.${year} KPIs - Vendas`,
+        `${code}.${year} KPIS - VENDAS`,
+        `${code}.${year} KPIs`,
+        `${code}.${year} KPIS`,
+        `${code}.${year}`,
+        `${code} ${year}`,
+        MONTHS[monthIdx]
+    ];
+}
+
+async function discoverSheet(monthIdx, baseSig) {
+    const names = getSheetNames(monthIdx);
+    for (const name of names) {
+        const data = await fetchSheet(name);
+        if (!data) continue;
+        if (data._sig !== baseSig) return data;
+        const detected = detectMonth(data);
+        if (detected === monthIdx) return data;
+    }
+    return null;
+}
+
+async function loadAllData() {
+    document.getElementById('loadingState').style.display = 'flex';
+
+    // First, fetch the default/first sheet (use "Janeiro" - if it doesn't exist, returns first sheet)
+    const firstData = await fetchSheet('Janeiro');
+    if (!firstData) {
+        document.getElementById('loadingState').innerHTML = `
+            <div class="no-data">
+                <p>Nao foi possivel acessar a planilha.</p>
+                <p style="font-size:12px">Verifique se a planilha esta compartilhada como "Qualquer pessoa com o link".</p>
+            </div>`;
+        return;
+    }
+
+    const baseSig = firstData._sig;
+    const firstMonth = detectMonth(firstData);
+
+    // Store the first sheet by its detected month
+    if (firstMonth !== null) {
+        allData[MONTHS[firstMonth]] = firstData;
+    }
+
+    // Try all 12 months in parallel (skip the one we already found)
+    const promises = [];
+    for (let i = 0; i < 12; i++) {
+        if (i === firstMonth) continue;
+        promises.push(
+            discoverSheet(i, baseSig).then(data => {
+                if (data) allData[MONTHS[i]] = data;
+            })
+        );
+    }
+    await Promise.all(promises);
+
+    document.getElementById('loadingState').style.display = 'none';
+    renderMonthTabs();
+
+    const availableMonths = MONTHS.filter(m => allData[m]);
+    if (availableMonths.length > 0) {
+        // Select the latest available month
+        switchMonth(availableMonths[availableMonths.length - 1]);
+    }
+
+    document.getElementById('lastUpdate').textContent =
+        'Atualizado: ' + new Date().toLocaleString('pt-BR');
+}
+
+function renderMonthTabs() {
+    const tabs = document.getElementById('monthTabs');
+    tabs.innerHTML = '';
+
+    MONTHS.forEach(month => {
+        const hasData = !!allData[month];
+        const tab = document.createElement('div');
+        tab.className = 'month-tab';
+        if (month === activeMonth) tab.className += ' active';
+        if (!hasData) tab.className += ' disabled';
+        tab.textContent = month;
+        if (hasData) {
+            tab.onclick = () => switchMonth(month);
+        }
+        tabs.appendChild(tab);
+    });
+}
+
+function switchMonth(month) {
+    activeMonth = month;
+    renderMonthTabs();
+    renderDashboard(allData[month], month);
+}
+
+function renderDashboard(data, month) {
+    const dash = document.getElementById('dashboard');
+    if (!data || !data.totals) {
+        dash.innerHTML = '<div class="no-data"><p>Sem dados para este mes.</p></div>';
+        return;
+    }
+
+    const t = data.totals;
+    const f = data.financials;
+
+    // Destroy old charts
+    Object.values(chartInstances).forEach(c => c.destroy());
+    chartInstances = {};
+
+    dash.innerHTML = `
+        <!-- KPI Cards -->
+        <div class="kpi-row">
+            <div class="kpi-card highlight">
+                <div class="kpi-label">Leads Gerados</div>
+                <div class="kpi-value">${t.leadsGerados}</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">MQL</div>
+                <div class="kpi-value">${t.mql}</div>
+                <div class="kpi-sub">Taxa: ${t.pctMQL}</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Lenha</div>
+                <div class="kpi-value">${t.lenha}</div>
+                <div class="kpi-sub">Taxa: ${t.pctLenha}</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Reunioes Agendadas</div>
+                <div class="kpi-value">${t.totalReunioesAg}</div>
+                <div class="kpi-sub">Taxa: ${t.pctAgendamento}</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Reunioes Realizadas</div>
+                <div class="kpi-value">${t.totalReunioesRe}</div>
+                <div class="kpi-sub">Taxa: ${t.pctReunioesRealizadas}</div>
+            </div>
+            <div class="kpi-card highlight">
+                <div class="kpi-label">Vendas</div>
+                <div class="kpi-value">${t.vendas}</div>
+                <div class="kpi-sub">Taxa: ${t.pctVendas}</div>
+            </div>
+        </div>
+
+        <!-- Financials -->
+        ${f.investimento ? `
+        <div class="kpi-row">
+            <div class="kpi-card">
+                <div class="kpi-label">Investimento em Trafego</div>
+                <div class="kpi-value" style="font-size:22px">${f.investimento}</div>
+            </div>
+            <div class="kpi-card highlight">
+                <div class="kpi-label">Faturamento</div>
+                <div class="kpi-value" style="font-size:22px">${f.faturamento || '-'}</div>
+            </div>
+            <div class="kpi-card highlight">
+                <div class="kpi-label">ROAS</div>
+                <div class="kpi-value">${f.roas || '-'}x</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Tiquete Medio</div>
+                <div class="kpi-value" style="font-size:22px">${f.tiqueteMedio || '-'}</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">CAC</div>
+                <div class="kpi-value" style="font-size:22px">${f.cac || '-'}</div>
+            </div>
+        </div>
+        ` : ''}
+
+        <!-- Funnel + Comparativo -->
+        <div class="section-grid">
+            <div class="card">
+                <div class="card-title">Funil de Conversao</div>
+                <div class="funnel-container" id="funnelContainer"></div>
+            </div>
+            <div class="card">
+                <div class="card-title">Comparativo: Closers</div>
+                <div class="closers-grid">
+                    <div class="closer-card" style="--closer-color: rgba(168,255,0,0.4); --closer-bg: rgba(168,255,0,0.06);">
+                        <div class="closer-card-bg"></div>
+                        <div class="closer-header">
+                            <div class="closer-avatar" style="background:#a8ff00;">L</div>
+                            <div class="closer-name">Lucas</div>
+                        </div>
+                        <div class="closer-stats">
+                            <div class="closer-stat">
+                                <div class="closer-stat-value" style="color:#a8ff00">${t.reunioesAgLucas}</div>
+                                <div class="closer-stat-label">Agendadas</div>
+                            </div>
+                            <div class="closer-stat">
+                                <div class="closer-stat-value" style="color:#a8ff00">${t.reunioesReLucas}</div>
+                                <div class="closer-stat-label">Realizadas</div>
+                            </div>
+                        </div>
+                        <div class="closer-taxa" style="color:#a8ff00">
+                            Taxa: <span>${t.reunioesAgLucas ? Math.round((t.reunioesReLucas / t.reunioesAgLucas) * 100) : 0}%</span>
+                        </div>
+                    </div>
+                    <div class="closer-card" style="--closer-color: rgba(0,255,136,0.4); --closer-bg: rgba(0,255,136,0.06);">
+                        <div class="closer-card-bg"></div>
+                        <div class="closer-header">
+                            <div class="closer-avatar" style="background:#00ff88;">M</div>
+                            <div class="closer-name">Mateus</div>
+                        </div>
+                        <div class="closer-stats">
+                            <div class="closer-stat">
+                                <div class="closer-stat-value" style="color:#00ff88">${t.reunioesAgMateus}</div>
+                                <div class="closer-stat-label">Agendadas</div>
+                            </div>
+                            <div class="closer-stat">
+                                <div class="closer-stat-value" style="color:#00ff88">${t.reunioesReMateus}</div>
+                                <div class="closer-stat-label">Realizadas</div>
+                            </div>
+                        </div>
+                        <div class="closer-taxa" style="color:#00ff88">
+                            Taxa: <span>${t.reunioesAgMateus ? Math.round((t.reunioesReMateus / t.reunioesAgMateus) * 100) : 0}%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="chart-container" style="height:180px">
+                    <canvas id="compChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Custos + Evolucao -->
+        <div class="section-grid">
+            <div class="card">
+                <div class="card-title">Custos por Etapa</div>
+                <div class="cost-grid">
+                    <div class="cost-card">
+                        <div class="cost-label">CPL</div>
+                        <div class="cost-value">${t.cpl}</div>
+                    </div>
+                    <div class="cost-card">
+                        <div class="cost-label">CMQL</div>
+                        <div class="cost-value">${t.cmql}</div>
+                    </div>
+                    <div class="cost-card">
+                        <div class="cost-label">CLenha</div>
+                        <div class="cost-value">${t.clenha}</div>
+                    </div>
+                </div>
+                <div class="chart-container" style="margin-top:20px">
+                    <canvas id="costChart"></canvas>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title">Evolucao Diaria de Leads</div>
+                <div class="chart-container">
+                    <canvas id="leadsChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Daily Table -->
+        <div class="section-grid full">
+            <div class="card">
+                <div class="card-title">Dados Diarios - ${month}</div>
+                <div class="daily-table-wrapper">
+                    <table class="daily-table" id="dailyTable"></table>
+                </div>
+            </div>
+        </div>
+    `;
+
+    renderFunnel(t);
+    renderCharts(data, t);
+    renderDailyTable(data);
+}
+
+function renderFunnel(t) {
+    const container = document.getElementById('funnelContainer');
+    const icons = ['&#x1F4E3;', '&#x2B50;', '&#x1F525;', '&#x1F4C5;', '&#x1F91D;', '&#x1F4B0;'];
+    const steps = [
+        { label: 'Leads Gerados', value: t.leadsGerados, rate: null, highlight: false },
+        { label: 'MQL', value: t.mql, rate: t.pctMQL, highlight: false },
+        { label: 'Lenha', value: t.lenha, rate: t.pctLenha, highlight: false },
+        { label: 'Reunioes Agendadas', value: t.totalReunioesAg, rate: t.pctAgendamento, highlight: false },
+        { label: 'Reunioes Realizadas', value: t.totalReunioesRe, rate: t.pctReunioesRealizadas, highlight: true,
+          sub: `Lucas: ${t.reunioesReLucas} &middot; Mateus: ${t.reunioesReMateus}` },
+        { label: 'Vendas', value: t.vendas, rate: t.pctVendas, highlight: true }
+    ];
+
+    const maxVal = Math.max(...steps.map(s => s.value), 1);
+    let html = '';
+
+    steps.forEach((step, i) => {
+        // Width ranges from 100% (max) to 50% (min) for visual funnel effect
+        const widthPct = 50 + (step.value / maxVal) * 50;
+        html += `
+            <div class="funnel-step${step.highlight ? ' highlight' : ''}" style="width:${widthPct}%">
+                <div class="funnel-step-left">
+                    <div class="funnel-icon">${icons[i]}</div>
+                    <div class="funnel-label-group">
+                        <div class="funnel-label">${step.label}</div>
+                        ${step.sub ? `<div class="funnel-sub">${step.sub}</div>` : ''}
+                    </div>
+                </div>
+                <div class="funnel-step-right">
+                    <div class="funnel-value">${step.value}</div>
+                    ${step.rate ? `<div class="funnel-rate">${step.rate}</div>` : ''}
+                </div>
+            </div>
+        `;
+        if (i < steps.length - 1) {
+            html += `<div class="funnel-connector"><div class="funnel-connector-dot"></div></div>`;
+        }
+    });
+
+    container.innerHTML = html;
+}
+
+function renderCharts(data, t) {
+    const chartDefaults = {
+        color: '#888',
+        borderColor: '#222',
+    };
+
+    Chart.defaults.color = '#888';
+    Chart.defaults.borderColor = '#222';
+
+    // Comparison chart
+    const compCtx = document.getElementById('compChart');
+    if (compCtx) {
+        chartInstances.comp = new Chart(compCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Agendadas', 'Realizadas'],
+                datasets: [
+                    {
+                        label: 'Lucas',
+                        data: [t.reunioesAgLucas, t.reunioesReLucas],
+                        backgroundColor: 'rgba(168, 255, 0, 0.7)',
+                        borderRadius: 6,
+                        barPercentage: 0.6
+                    },
+                    {
+                        label: 'Mateus',
+                        data: [t.reunioesAgMateus, t.reunioesReMateus],
+                        backgroundColor: 'rgba(0, 255, 136, 0.7)',
+                        borderRadius: 6,
+                        barPercentage: 0.6
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { labels: { font: { size: 11 } } } },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.03)' } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    }
+
+    // Cost chart
+    const costCtx = document.getElementById('costChart');
+    if (costCtx) {
+        const activeData = data.dailyData.filter(d => d.leadsGerados > 0);
+        chartInstances.cost = new Chart(costCtx, {
+            type: 'line',
+            data: {
+                labels: activeData.map(d => d.data),
+                datasets: [
+                    {
+                        label: 'CPL',
+                        data: activeData.map(d => parseBRL(d.cpl)),
+                        borderColor: '#a8ff00',
+                        backgroundColor: 'rgba(168,255,0,0.1)',
+                        tension: 0.3,
+                        fill: false,
+                        pointRadius: 3,
+                        borderWidth: 2
+                    },
+                    {
+                        label: 'CMQL',
+                        data: activeData.map(d => parseBRL(d.cmql)),
+                        borderColor: '#00ff88',
+                        tension: 0.3,
+                        fill: false,
+                        pointRadius: 3,
+                        borderWidth: 2
+                    },
+                    {
+                        label: 'CLenha',
+                        data: activeData.map(d => parseBRL(d.clenha)),
+                        borderColor: '#ff8800',
+                        tension: 0.3,
+                        fill: false,
+                        pointRadius: 3,
+                        borderWidth: 2
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { labels: { font: { size: 11 } } } },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.03)' } },
+                    x: { grid: { display: false }, ticks: { font: { size: 10 } } }
+                }
+            }
+        });
+    }
+
+    // Leads daily chart
+    const leadsCtx = document.getElementById('leadsChart');
+    if (leadsCtx) {
+        const activeData = data.dailyData.filter(d => d.leadsGerados > 0);
+        chartInstances.leads = new Chart(leadsCtx, {
+            type: 'bar',
+            data: {
+                labels: activeData.map(d => d.data),
+                datasets: [
+                    {
+                        label: 'Leads',
+                        data: activeData.map(d => d.leadsGerados),
+                        backgroundColor: 'rgba(168, 255, 0, 0.3)',
+                        borderColor: '#a8ff00',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    },
+                    {
+                        label: 'MQL',
+                        data: activeData.map(d => d.mql),
+                        backgroundColor: 'rgba(0, 255, 136, 0.3)',
+                        borderColor: '#00ff88',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { labels: { font: { size: 11 } } } },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.03)' } },
+                    x: { grid: { display: false }, ticks: { font: { size: 10 } } }
+                }
+            }
+        });
+    }
+}
+
+function renderDailyTable(data) {
+    const table = document.getElementById('dailyTable');
+    const activeData = data.dailyData.filter(d => d.leadsGerados > 0);
+    const t = data.totals;
+
+    let html = `
+        <thead><tr>
+            <th>Data</th><th>Leads</th><th>%MQL</th><th>MQL</th>
+            <th>%Lenha</th><th>Lenha</th><th>Ag. Lucas</th><th>Ag. Mateus</th>
+            <th>Total Ag.</th><th>Re. Lucas</th><th>Re. Mateus</th><th>Total Re.</th>
+            <th>Vendas</th><th>Invest.</th><th>CPL</th>
+        </tr></thead><tbody>`;
+
+    activeData.forEach(d => {
+        html += `<tr>
+            <td>${d.data}</td><td>${d.leadsGerados}</td><td>${d.pctMQL}</td><td>${d.mql}</td>
+            <td>${d.pctLenha}</td><td>${d.lenha}</td><td>${d.reunioesAgLucas}</td><td>${d.reunioesAgMateus}</td>
+            <td>${d.totalReunioesAg}</td><td>${d.reunioesReLucas}</td><td>${d.reunioesReMateus}</td>
+            <td>${d.totalReunioesRe}</td><td>${d.vendas}</td><td>${d.investimento}</td><td>${d.cpl}</td>
+        </tr>`;
+    });
+
+    html += `<tr class="total-row">
+        <td>TOTAL</td><td>${t.leadsGerados}</td><td>${t.pctMQL}</td><td>${t.mql}</td>
+        <td>${t.pctLenha}</td><td>${t.lenha}</td><td>${t.reunioesAgLucas}</td><td>${t.reunioesAgMateus}</td>
+        <td>${t.totalReunioesAg}</td><td>${t.reunioesReLucas}</td><td>${t.reunioesReMateus}</td>
+        <td>${t.totalReunioesRe}</td><td>${t.vendas}</td><td>${t.investimento}</td><td>${t.cpl}</td>
+    </tr>`;
+
+    html += '</tbody>';
+    table.innerHTML = html;
+}
+
+function refreshData() {
+    allData = {};
+    document.getElementById('dashboard').innerHTML = `
+        <div class="loading" id="loadingState">
+            <div class="spinner"></div>
+            <p>Atualizando dados...</p>
+        </div>`;
+    loadAllData();
+}
+
+// Auto-refresh every 1 minute
+setInterval(refreshData, 60 * 1000);
+
+// Initial load
+loadAllData();
+</script>
+
+</body>
+</html>
