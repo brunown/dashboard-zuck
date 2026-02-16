@@ -268,60 +268,27 @@
             padding: 10px 0;
         }
 
-        .funnel-row {
+        .funnel-step {
             display: flex;
             align-items: center;
-            justify-content: center;
             gap: 14px;
             padding: 14px 24px;
-            border-radius: 14px;
+            border-radius: 12px;
             transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-            /* Trapezoid shape via clip-path */
-            clip-path: polygon(
-                var(--inset) 0%,
-                calc(100% - var(--inset)) 0%,
-                calc(100% - var(--inset-bot)) 100%,
-                var(--inset-bot) 100%
-            );
-            background: linear-gradient(180deg, rgba(168,255,0,0.10) 0%, rgba(168,255,0,0.03) 100%);
-            width: 100%;
+            background: linear-gradient(135deg, rgba(168,255,0,0.06) 0%, rgba(168,255,0,0.02) 100%);
+            border: 1px solid rgba(168,255,0,0.08);
+            min-width: 420px;
         }
 
-        .funnel-row::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            border-radius: 14px;
-            background: linear-gradient(135deg, rgba(168,255,0,0.08) 0%, transparent 70%);
-            pointer-events: none;
+        .funnel-step:hover {
+            background: linear-gradient(135deg, rgba(168,255,0,0.12) 0%, rgba(168,255,0,0.04) 100%);
+            border-color: rgba(168,255,0,0.2);
         }
 
-        .funnel-row:hover {
-            background: linear-gradient(180deg, rgba(168,255,0,0.16) 0%, rgba(168,255,0,0.05) 100%);
-        }
-
-        .funnel-row.highlight {
-            background: linear-gradient(180deg, rgba(168,255,0,0.18) 0%, rgba(168,255,0,0.06) 100%);
-        }
-
-        /* Outline layer (clip-path doesn't support border) */
-        .funnel-outline {
-            width: 100%;
-            padding: 1px;
-            clip-path: polygon(
-                var(--inset) 0%,
-                calc(100% - var(--inset)) 0%,
-                calc(100% - var(--inset-bot)) 100%,
-                var(--inset-bot) 100%
-            );
-            background: linear-gradient(180deg, rgba(168,255,0,0.2) 0%, rgba(168,255,0,0.06) 100%);
-        }
-
-        .funnel-outline.highlight {
-            background: linear-gradient(180deg, var(--lime) 0%, rgba(168,255,0,0.3) 100%);
-            filter: drop-shadow(0 0 12px rgba(168,255,0,0.15));
+        .funnel-step.highlight {
+            background: linear-gradient(135deg, rgba(168,255,0,0.14) 0%, rgba(168,255,0,0.04) 100%);
+            border-color: var(--lime);
+            box-shadow: 0 0 24px rgba(168,255,0,0.1);
         }
 
         .funnel-icon {
@@ -333,14 +300,18 @@
             justify-content: center;
             font-size: 17px;
             flex-shrink: 0;
-            background: rgba(168,255,0,0.12);
-            z-index: 1;
+            background: rgba(168,255,0,0.1);
+            border: 1px solid rgba(168,255,0,0.15);
+        }
+
+        .funnel-step.highlight .funnel-icon {
+            background: rgba(168,255,0,0.2);
+            border-color: var(--lime);
         }
 
         .funnel-label-group {
             display: flex;
             flex-direction: column;
-            z-index: 1;
             flex: 1;
             min-width: 0;
         }
@@ -360,12 +331,11 @@
         }
 
         .funnel-value {
-            font-size: 28px;
+            font-size: 26px;
             font-weight: 800;
             color: var(--lime);
             letter-spacing: -1px;
             line-height: 1;
-            z-index: 1;
             flex-shrink: 0;
         }
 
@@ -373,26 +343,44 @@
             font-size: 12px;
             font-weight: 700;
             color: var(--text-primary);
-            background: rgba(0,0,0,0.35);
+            background: rgba(168,255,0,0.12);
             padding: 5px 10px;
             border-radius: 20px;
+            border: 1px solid rgba(168,255,0,0.15);
             min-width: 46px;
             text-align: center;
-            z-index: 1;
             flex-shrink: 0;
         }
 
-        .funnel-row.highlight .funnel-rate {
+        .funnel-step.highlight .funnel-rate {
+            background: rgba(168,255,0,0.2);
+            border-color: var(--lime);
             color: var(--lime);
-            background: rgba(0,0,0,0.5);
         }
 
         .funnel-connector {
             display: flex;
             align-items: center;
             justify-content: center;
-            height: 6px;
+            height: 24px;
             position: relative;
+        }
+
+        .funnel-connector::before {
+            content: '';
+            position: absolute;
+            width: 2px;
+            height: 100%;
+            background: linear-gradient(180deg, rgba(168,255,0,0.3) 0%, rgba(168,255,0,0.08) 100%);
+        }
+
+        .funnel-connector-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--lime);
+            opacity: 0.4;
+            z-index: 1;
         }
 
         /* Comparativo Closers */
@@ -1171,31 +1159,24 @@ function renderFunnel(t) {
         { label: 'Vendas', value: t.vendas, rate: t.pctVendas, highlight: true }
     ];
 
-    const total = steps.length;
     let html = '';
 
     steps.forEach((step, i) => {
-        // Each step: top inset and bottom inset create trapezoid
-        // Top of first = 0%, bottom of last = ~18%
-        const insetTop = (i / total) * 18;
-        const insetBot = ((i + 1) / total) * 18;
-        const hl = step.highlight ? ' highlight' : '';
-
+        // Width: 100% for first, decreasing by 7% each step (100, 93, 86, 79, 72, 65)
+        const widthPct = 100 - (i * 7);
         html += `
-            <div class="funnel-outline${hl}" style="--inset:${insetTop}%;--inset-bot:${insetBot}%">
-                <div class="funnel-row${hl}" style="--inset:${insetTop}%;--inset-bot:${insetBot}%">
-                    <div class="funnel-icon">${icons[i]}</div>
-                    <div class="funnel-label-group">
-                        <div class="funnel-label">${step.label}</div>
-                        ${step.sub ? `<div class="funnel-sub">${step.sub}</div>` : ''}
-                    </div>
-                    <div class="funnel-value">${step.value}</div>
-                    ${step.rate ? `<div class="funnel-rate">${step.rate}</div>` : ''}
+            <div class="funnel-step${step.highlight ? ' highlight' : ''}" style="width:${widthPct}%">
+                <div class="funnel-icon">${icons[i]}</div>
+                <div class="funnel-label-group">
+                    <div class="funnel-label">${step.label}</div>
+                    ${step.sub ? `<div class="funnel-sub">${step.sub}</div>` : ''}
                 </div>
+                <div class="funnel-value">${step.value}</div>
+                ${step.rate ? `<div class="funnel-rate">${step.rate}</div>` : ''}
             </div>
         `;
         if (i < steps.length - 1) {
-            html += `<div class="funnel-connector"></div>`;
+            html += `<div class="funnel-connector"><div class="funnel-connector-dot"></div></div>`;
         }
     });
 
