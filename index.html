@@ -1064,7 +1064,6 @@ function switchMonth(month) {
 }
 
 function renderDashboard(data, month) {
-    renderMetaCard(data);
     const dash = document.getElementById('dashboard');
     if (!data || !data.totals) {
         dash.innerHTML = '<div class="no-data"><p>Sem dados para este mes.</p></div>';
@@ -1079,25 +1078,41 @@ function renderDashboard(data, month) {
     chartInstances = {};
 
     dash.innerHTML = `
-        <!-- KPI Cards -->
-        <!-- Meta de Faturamento -->
-        <div class="meta-section" id="metaSection"></div>
-
-                <!-- META DE FATURAMENTO -->
-        <div class="kpi-row">
-            <div class="kpi-card highlight" id="metaCard">
-                <div class="kpi-label">Meta de Faturamento</div>
-                <div class="kpi-value" id="metaValue">-</div>
-            </div>
-            <div class="kpi-card" id="progressCard">
-                <div class="kpi-label">Progresso</div>
-                <div style="height:60px;background:rgba(168,255,0,0.1);border-radius:8px;margin-top:8px">
-                    <div id="progressBar" style="height:100%;background:linear-gradient(90deg,#a8ff00,#7acc00);border-radius:8px;width:0%;transition:width 0.5s ease;display:flex;align-items:center;justify-content:center;color:#000;font-weight:700;font-size:12px"></div>
+        <!-- Meta de Faturamento Banner -->
+        ${data.metaFaturamento ? (() => {
+            const meta = parseBRL(data.metaFaturamento);
+            const fat = parseBRL(data.financials?.faturamento || '0');
+            const pct = meta > 0 ? Math.min((fat / meta) * 100, 100).toFixed(1) : 0;
+            return `
+            <div style="background:linear-gradient(135deg,rgba(168,255,0,0.12),rgba(168,255,0,0.03));border:2px solid #a8ff00;border-radius:14px;padding:24px;margin-bottom:24px;box-shadow:0 0 32px rgba(168,255,0,0.12)">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+                    <span style="font-size:28px">🎯</span>
+                    <span style="font-size:16px;font-weight:700">Meta de Faturamento</span>
                 </div>
-            </div>
-        </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px">
+                    <div style="text-align:center">
+                        <div style="font-size:11px;font-weight:600;text-transform:uppercase;color:#888;margin-bottom:4px">Faturamento</div>
+                        <div style="font-size:24px;font-weight:800;color:#a8ff00">R$ ${fat.toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>
+                    </div>
+                    <div style="text-align:center">
+                        <div style="font-size:11px;font-weight:600;text-transform:uppercase;color:#888;margin-bottom:4px">Meta</div>
+                        <div style="font-size:24px;font-weight:800;color:#a8ff00">R$ ${meta.toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>
+                    </div>
+                    <div style="text-align:center">
+                        <div style="font-size:11px;font-weight:600;text-transform:uppercase;color:#888;margin-bottom:4px">Progresso</div>
+                        <div style="font-size:24px;font-weight:800;color:#a8ff00">${pct}%</div>
+                    </div>
+                </div>
+                <div style="background:rgba(0,0,0,0.3);border-radius:12px;height:32px;overflow:hidden;border:1px solid rgba(168,255,0,0.2)">
+                    <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#a8ff00,#7acc00);border-radius:12px;display:flex;align-items:center;justify-content:flex-end;padding-right:12px;font-size:13px;font-weight:700;color:#000">
+                        ${pct > 10 ? pct + '%' : ''}
+                    </div>
+                </div>
+            </div>`;
+        })() : ''}
 
-                <div class="kpi-row">
+        <!-- KPI Cards -->
+        <div class="kpi-row">
             <div class="kpi-card highlight">
                 <div class="kpi-label">Leads Gerados</div>
                 <div class="kpi-value">${t.leadsGerados}</div>
@@ -1131,24 +1146,7 @@ function renderDashboard(data, month) {
 
         <!-- Financials -->
         ${f.investimento ? `
-        <!-- Meta de Faturamento -->
-        <div class="meta-section" id="metaSection"></div>
-
-                <!-- META DE FATURAMENTO -->
         <div class="kpi-row">
-            <div class="kpi-card highlight" id="metaCard">
-                <div class="kpi-label">Meta de Faturamento</div>
-                <div class="kpi-value" id="metaValue">-</div>
-            </div>
-            <div class="kpi-card" id="progressCard">
-                <div class="kpi-label">Progresso</div>
-                <div style="height:60px;background:rgba(168,255,0,0.1);border-radius:8px;margin-top:8px">
-                    <div id="progressBar" style="height:100%;background:linear-gradient(90deg,#a8ff00,#7acc00);border-radius:8px;width:0%;transition:width 0.5s ease;display:flex;align-items:center;justify-content:center;color:#000;font-weight:700;font-size:12px"></div>
-                </div>
-            </div>
-        </div>
-
-                <div class="kpi-row">
             <div class="kpi-card">
                 <div class="kpi-label">Investimento em Trafego</div>
                 <div class="kpi-value" style="font-size:22px">${f.investimento}</div>
@@ -1269,67 +1267,11 @@ function renderDashboard(data, month) {
         </div>
     `;
 
-    renderMeta(data);
     renderFunnel(t);
     renderCharts(data, t);
     renderDailyTable(data);
 }
 
-function renderMeta(data) {
-    const section = document.getElementById('metaSection');
-    if (!data || !data.metaFaturamento) {
-        section.style.display = 'none';
-        return;
-    }
-
-    const meta = parseBRL(data.metaFaturamento);
-    const faturamento = parseBRL(data.faturamento || '0');
-    const pct = meta > 0 ? Math.min((faturamento / meta) * 100, 100) : 0;
-
-    section.innerHTML = `
-        <div class="meta-card">
-            <div class="meta-header">
-                <div class="meta-icon">🎯</div>
-                <div class="meta-title">Meta de Faturamento</div>
-            </div>
-            <div class="meta-values">
-                <div class="meta-value">
-                    <div class="meta-value-label">Faturamento</div>
-                    <div class="meta-value-number">${formatBRL(faturamento)}</div>
-                </div>
-                <div class="meta-value">
-                    <div class="meta-value-label">Meta</div>
-                    <div class="meta-value-number">${formatBRL(meta)}</div>
-                </div>
-                <div class="meta-value">
-                    <div class="meta-value-label">Progresso</div>
-                    <div class="meta-value-number">${pct.toFixed(1)}%</div>
-                </div>
-            </div>
-            <div class="meta-progress">
-                <div class="meta-progress-fill" style="width:${pct}%">
-                    ${pct > 10 ? `<div class="meta-progress-text">${pct.toFixed(0)}%</div>` : ''}
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-function renderMetaCard(data) {
-    if (!data || !data.totals) return;
-    
-    // Puxar valor de P44 (meta) e P35 (faturamento) dos dados
-    // Assumindo que os últimos valores da coluna P contêm isso
-    // Meta: R$ 150.000,00
-    
-    const metaValue = 150000; // Hardcoded por enquanto - será dinâmico
-    const faturamentoValue = (data.totals.vendas || 0) * 17500; // Estimado
-    const pct = Math.min((faturamentoValue / metaValue) * 100, 100);
-    
-    document.getElementById('metaValue').textContent = formatBRL(metaValue);
-    document.getElementById('progressBar').style.width = pct + '%';
-    document.getElementById('progressBar').textContent = pct.toFixed(0) + '%';
-}
 
 function renderFunnel(t) {
     const container = document.getElementById('funnelContainer');
