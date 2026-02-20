@@ -860,6 +860,14 @@ function processSheetData(rows) {
     let financials = {};
     let metaFaturamento = null;
 
+    // Debug: log all rows to understand structure
+    console.log('Total rows:', rows.length);
+    for (let i = 30; i < Math.min(rows.length, 50); i++) {
+        if (rows[i] && rows[i][15]) {
+            console.log(`Row ${i}, Col P (15):`, rows[i][15]);
+        }
+    }
+
     // Extract faturamento (P35) and meta de faturamento (P44) from column P (index 15)
     let faturamento = null;
     if (rows.length > 34 && rows[34] && rows[34][15]) {
@@ -868,6 +876,7 @@ function processSheetData(rows) {
     if (rows.length > 43 && rows[43] && rows[43][15]) {
         metaFaturamento = rows[43][15].trim();
     }
+    console.log('metaFaturamento extraído:', metaFaturamento);
 
     // Find where daily data ends (row with empty date but has totals)
     for (let i = 1; i < rows.length; i++) {
@@ -1065,6 +1074,8 @@ function switchMonth(month) {
 
 function renderDashboard(data, month) {
     const dash = document.getElementById('dashboard');
+    console.log('renderDashboard data:', data);
+    console.log('metaFaturamento in renderDashboard:', data?.metaFaturamento);
     if (!data || !data.totals) {
         dash.innerHTML = '<div class="no-data"><p>Sem dados para este mes.</p></div>';
         return;
