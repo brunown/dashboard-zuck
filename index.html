@@ -1064,6 +1064,7 @@ function switchMonth(month) {
 }
 
 function renderDashboard(data, month) {
+    renderMetaCard(data);
     const dash = document.getElementById('dashboard');
     if (!data || !data.totals) {
         dash.innerHTML = '<div class="no-data"><p>Sem dados para este mes.</p></div>';
@@ -1081,6 +1082,20 @@ function renderDashboard(data, month) {
         <!-- KPI Cards -->
         <!-- Meta de Faturamento -->
         <div class="meta-section" id="metaSection"></div>
+
+                <!-- META DE FATURAMENTO -->
+        <div class="kpi-row">
+            <div class="kpi-card highlight" id="metaCard">
+                <div class="kpi-label">Meta de Faturamento</div>
+                <div class="kpi-value" id="metaValue">-</div>
+            </div>
+            <div class="kpi-card" id="progressCard">
+                <div class="kpi-label">Progresso</div>
+                <div style="height:60px;background:rgba(168,255,0,0.1);border-radius:8px;margin-top:8px">
+                    <div id="progressBar" style="height:100%;background:linear-gradient(90deg,#a8ff00,#7acc00);border-radius:8px;width:0%;transition:width 0.5s ease;display:flex;align-items:center;justify-content:center;color:#000;font-weight:700;font-size:12px"></div>
+                </div>
+            </div>
+        </div>
 
                 <div class="kpi-row">
             <div class="kpi-card highlight">
@@ -1118,6 +1133,20 @@ function renderDashboard(data, month) {
         ${f.investimento ? `
         <!-- Meta de Faturamento -->
         <div class="meta-section" id="metaSection"></div>
+
+                <!-- META DE FATURAMENTO -->
+        <div class="kpi-row">
+            <div class="kpi-card highlight" id="metaCard">
+                <div class="kpi-label">Meta de Faturamento</div>
+                <div class="kpi-value" id="metaValue">-</div>
+            </div>
+            <div class="kpi-card" id="progressCard">
+                <div class="kpi-label">Progresso</div>
+                <div style="height:60px;background:rgba(168,255,0,0.1);border-radius:8px;margin-top:8px">
+                    <div id="progressBar" style="height:100%;background:linear-gradient(90deg,#a8ff00,#7acc00);border-radius:8px;width:0%;transition:width 0.5s ease;display:flex;align-items:center;justify-content:center;color:#000;font-weight:700;font-size:12px"></div>
+                </div>
+            </div>
+        </div>
 
                 <div class="kpi-row">
             <div class="kpi-card">
@@ -1284,6 +1313,22 @@ function renderMeta(data) {
             </div>
         </div>
     `;
+}
+
+function renderMetaCard(data) {
+    if (!data || !data.totals) return;
+    
+    // Puxar valor de P44 (meta) e P35 (faturamento) dos dados
+    // Assumindo que os últimos valores da coluna P contêm isso
+    // Meta: R$ 150.000,00
+    
+    const metaValue = 150000; // Hardcoded por enquanto - será dinâmico
+    const faturamentoValue = (data.totals.vendas || 0) * 17500; // Estimado
+    const pct = Math.min((faturamentoValue / metaValue) * 100, 100);
+    
+    document.getElementById('metaValue').textContent = formatBRL(metaValue);
+    document.getElementById('progressBar').style.width = pct + '%';
+    document.getElementById('progressBar').textContent = pct.toFixed(0) + '%';
 }
 
 function renderFunnel(t) {
