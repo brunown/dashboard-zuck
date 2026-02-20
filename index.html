@@ -869,20 +869,30 @@ function processSheetData(rows) {
     }
 
     // Extract meta de faturamento - procura dinamicamente pela label
+    // Debug: log all rows to see structure
+    console.log('Total rows:', rows.length);
+    for (let i = Math.max(0, rows.length - 20); i < rows.length; i++) {
+        if (rows[i]) {
+            console.log(`Row ${i}:`, rows[i].slice(0, 16).join(' | '));
+        }
+    }
+
     for (let i = rows.length - 1; i >= 0; i--) {
         const row = rows[i];
         if (row && row.length > 0) {
-            // Procura "Meta de faturamento" em qualquer coluna antes da coluna P
-            const rowText = row.slice(0, 15).join(' ').toLowerCase();
+            // Procura "Meta de faturamento" em TODA a linha
+            const rowText = row.join(' ').toLowerCase();
             if (rowText.includes('meta') && rowText.includes('faturamento')) {
+                console.log('Encontrou Meta de faturamento na linha:', i, row);
                 if (row[15]) {
                     metaFaturamento = row[15].trim();
+                    console.log('Valor extraído:', metaFaturamento);
                 }
                 break;
             }
         }
     }
-    console.log('metaFaturamento extraído:', metaFaturamento);
+    console.log('metaFaturamento final:', metaFaturamento);
 
     // Find where daily data ends (row with empty date but has totals)
     for (let i = 1; i < rows.length; i++) {
