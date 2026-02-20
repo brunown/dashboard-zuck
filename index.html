@@ -868,23 +868,6 @@ function processSheetData(rows) {
         }
     }
 
-    // Extract meta de faturamento - pega o último valor em coluna P que é > faturamento
-    const fatValue = parseBRL(financials?.faturamento || '0');
-
-    // Procura a última linha com valor em coluna P que seja > faturamento
-    for (let i = rows.length - 1; i >= 0; i--) {
-        const row = rows[i];
-        if (row && row[15]) {
-            const val = parseBRL(row[15].trim());
-            // Meta deve ser > faturamento e estar nos últimos 20 valores
-            if (val > fatValue && val > 50000 && i > rows.length - 20) {
-                metaFaturamento = row[15].trim();
-                console.log('Meta de faturamento encontrada na row', i, ':', metaFaturamento);
-                break;
-            }
-        }
-    }
-
     // Find where daily data ends (row with empty date but has totals)
     for (let i = 1; i < rows.length; i++) {
         const row = rows[i];
@@ -951,11 +934,25 @@ function processSheetData(rows) {
 
     if (!totals && dailyData.length === 0) return null;
 
+    // Extract meta de faturamento - pega o último valor em coluna P que é > faturamento
+    const fatValue = parseBRL(financials?.faturamento || '0');
+    for (let i = rows.length - 1; i >= 0; i--) {
+        const row = rows[i];
+        if (row && row[15]) {
+            const val = parseBRL(row[15].trim());
+            // Meta deve ser > faturamento e estar nos últimos 20 valores
+            if (val > fatValue && val > 50000 && i > rows.length - 20) {
+                metaFaturamento = row[15].trim();
+                console.log('Meta de faturamento encontrada na row', i, ':', metaFaturamento);
+                break;
+            }
+        }
+    }
+
     console.log('financials extrahído:', financials);
     console.log('metaFaturamento final:', metaFaturamento);
-    console.log('faturamento final:', faturamento);
 
-    return { dailyData, totals, financials, metaFaturamento, faturamento };
+    return { dailyData, totals, financials, metaFaturamento };
 }
 
 async function fetchSheet(sheetName) {
