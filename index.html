@@ -944,6 +944,10 @@ function processSheetData(rows) {
 
     if (!totals && dailyData.length === 0) return null;
 
+    console.log('financials extrahído:', financials);
+    console.log('metaFaturamento final:', metaFaturamento);
+    console.log('faturamento final:', faturamento);
+
     return { dailyData, totals, financials, metaFaturamento, faturamento };
 }
 
