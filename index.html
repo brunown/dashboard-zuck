@@ -860,7 +860,11 @@ function processSheetData(rows) {
     let financials = {};
     let metaFaturamento = null;
 
-    // Extract meta de faturamento from row 44 (index 43), column P (index 15)
+    // Extract faturamento (P35) and meta de faturamento (P44) from column P (index 15)
+    let faturamento = null;
+    if (rows.length > 34 && rows[34] && rows[34][15]) {
+        faturamento = rows[34][15].trim();
+    }
     if (rows.length > 43 && rows[43] && rows[43][15]) {
         metaFaturamento = rows[43][15].trim();
     }
@@ -931,7 +935,7 @@ function processSheetData(rows) {
 
     if (!totals && dailyData.length === 0) return null;
 
-    return { dailyData, totals, financials, metaFaturamento };
+    return { dailyData, totals, financials, metaFaturamento, faturamento };
 }
 
 async function fetchSheet(sheetName) {
@@ -1250,8 +1254,8 @@ function renderMeta(data) {
     }
 
     const meta = parseBRL(data.metaFaturamento);
-    const faturamento = data.totals && data.totals.vendas ? data.totals.vendas * 17500 : 0; // Estimado
-    const pct = Math.min((faturamento / meta) * 100, 100);
+    const faturamento = parseBRL(data.faturamento || '0');
+    const pct = meta > 0 ? Math.min((faturamento / meta) * 100, 100) : 0;
 
     section.innerHTML = `
         <div class="meta-card">
