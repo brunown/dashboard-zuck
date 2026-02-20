@@ -860,29 +860,10 @@ function processSheetData(rows) {
     let financials = {};
     let metaFaturamento = null;
 
-    // Debug: log all rows to understand structure
-    console.log('Total rows:', rows.length);
-    for (let i = 30; i < Math.min(rows.length, 50); i++) {
-        if (rows[i] && rows[i][15]) {
-            console.log(`Row ${i}, Col P (15):`, rows[i][15]);
-        }
+    // Extract meta de faturamento from row 44 (index 43), column P (index 15)
+    if (rows.length > 43 && rows[43] && rows[43][15]) {
+        metaFaturamento = rows[43][15].trim();
     }
-
-    // Extract meta de faturamento - procura dinamicamente pela label
-    for (let i = rows.length - 1; i >= 0; i--) {
-        const row = rows[i];
-        if (row && row.length > 0) {
-            // Procura "Meta de faturamento" em qualquer coluna antes da coluna P
-            const rowText = row.slice(0, 15).join(' ').toLowerCase();
-            if (rowText.includes('meta') && rowText.includes('faturamento')) {
-                if (row[15]) {
-                    metaFaturamento = row[15].trim();
-                }
-                break;
-            }
-        }
-    }
-    console.log('metaFaturamento extraído:', metaFaturamento);
 
     // Find where daily data ends (row with empty date but has totals)
     for (let i = 1; i < rows.length; i++) {
@@ -950,11 +931,7 @@ function processSheetData(rows) {
 
     if (!totals && dailyData.length === 0) return null;
 
-    console.log('financials extrahído:', financials);
-    console.log('metaFaturamento final:', metaFaturamento);
-    console.log('faturamento final:', faturamento);
-
-    return { dailyData, totals, financials, metaFaturamento, faturamento };
+    return { dailyData, totals, financials, metaFaturamento };
 }
 
 async function fetchSheet(sheetName) {
@@ -1084,8 +1061,6 @@ function switchMonth(month) {
 
 function renderDashboard(data, month) {
     const dash = document.getElementById('dashboard');
-    console.log('renderDashboard data:', data);
-    console.log('metaFaturamento in renderDashboard:', data?.metaFaturamento);
     if (!data || !data.totals) {
         dash.innerHTML = '<div class="no-data"><p>Sem dados para este mes.</p></div>';
         return;
@@ -1099,50 +1074,11 @@ function renderDashboard(data, month) {
     chartInstances = {};
 
     dash.innerHTML = `
-        <!-- Meta de Faturamento Banner -->
-        ${data.metaFaturamento ? (() => {
-            const meta = parseBRL(data.metaFaturamento);
-            const fat = parseBRL(data.financials?.faturamento || '0');
-            const falta = Math.max(0, meta - fat);
-            const pct = meta > 0 ? Math.min((fat / meta) * 100, 100).toFixed(1) : 0;
-            return `
-            <div style="background:linear-gradient(135deg,rgba(168,255,0,0.12),rgba(168,255,0,0.03));border:2px solid #a8ff00;border-radius:14px;padding:24px;margin-bottom:24px;box-shadow:0 0 32px rgba(168,255,0,0.12)">
-                <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
-                    <span style="font-size:28px">🎯</span>
-                    <span style="font-size:16px;font-weight:700">Meta de Faturamento</span>
-                </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px">
-                    <div style="text-align:center">
-                        <div style="font-size:11px;font-weight:600;text-transform:uppercase;color:#888;margin-bottom:4px">Faturamento</div>
-                        <div style="font-size:24px;font-weight:800;color:#a8ff00">R$ ${fat.toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>
-                    </div>
-                    <div style="text-align:center">
-                        <div style="font-size:11px;font-weight:600;text-transform:uppercase;color:#888;margin-bottom:4px">Meta</div>
-                        <div style="font-size:24px;font-weight:800;color:#a8ff00">R$ ${meta.toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>
-                    </div>
-                    <div style="text-align:center">
-                        <div style="font-size:11px;font-weight:600;text-transform:uppercase;color:#888;margin-bottom:4px">Falta para Meta</div>
-                        <div style="font-size:24px;font-weight:800;color:#ff8844">R$ ${falta.toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>
-                    </div>
-                </div>
-                <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
-                    <div style="flex:1;background:rgba(0,0,0,0.3);border-radius:12px;height:40px;overflow:hidden;border:1px solid rgba(168,255,0,0.2)">
-                        <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#a8ff00,#7acc00);border-radius:12px;display:flex;align-items:center;justify-content:center;padding-right:12px;font-size:14px;font-weight:700;color:#000;transition:width 0.6s ease">
-                            ${pct > 8 ? pct + '%' : ''}
-                        </div>
-                    </div>
-                    <div style="text-align:center;min-width:60px">
-                        <div style="font-size:20px;font-weight:800;color:#a8ff00">${pct}%</div>
-                    </div>
-                </div>
-                <div style="font-size:12px;color:#888;text-align:center">
-                    ${fat >= meta ? '✓ Meta atingida!' : `Faltam R$ ${falta.toLocaleString('pt-BR',{minimumFractionDigits:2})}`}
-                </div>
-            </div>`;
-        })() : ''}
-
         <!-- KPI Cards -->
-        <div class="kpi-row">
+        <!-- Meta de Faturamento -->
+        <div class="meta-section" id="metaSection"></div>
+
+                <div class="kpi-row">
             <div class="kpi-card highlight">
                 <div class="kpi-label">Leads Gerados</div>
                 <div class="kpi-value">${t.leadsGerados}</div>
@@ -1176,7 +1112,10 @@ function renderDashboard(data, month) {
 
         <!-- Financials -->
         ${f.investimento ? `
-        <div class="kpi-row">
+        <!-- Meta de Faturamento -->
+        <div class="meta-section" id="metaSection"></div>
+
+                <div class="kpi-row">
             <div class="kpi-card">
                 <div class="kpi-label">Investimento em Trafego</div>
                 <div class="kpi-value" style="font-size:22px">${f.investimento}</div>
@@ -1297,11 +1236,51 @@ function renderDashboard(data, month) {
         </div>
     `;
 
+    renderMeta(data);
     renderFunnel(t);
     renderCharts(data, t);
     renderDailyTable(data);
 }
 
+function renderMeta(data) {
+    const section = document.getElementById('metaSection');
+    if (!data || !data.metaFaturamento) {
+        section.style.display = 'none';
+        return;
+    }
+
+    const meta = parseBRL(data.metaFaturamento);
+    const faturamento = data.totals && data.totals.vendas ? data.totals.vendas * 17500 : 0; // Estimado
+    const pct = Math.min((faturamento / meta) * 100, 100);
+
+    section.innerHTML = `
+        <div class="meta-card">
+            <div class="meta-header">
+                <div class="meta-icon">🎯</div>
+                <div class="meta-title">Meta de Faturamento</div>
+            </div>
+            <div class="meta-values">
+                <div class="meta-value">
+                    <div class="meta-value-label">Faturamento</div>
+                    <div class="meta-value-number">${formatBRL(faturamento)}</div>
+                </div>
+                <div class="meta-value">
+                    <div class="meta-value-label">Meta</div>
+                    <div class="meta-value-number">${formatBRL(meta)}</div>
+                </div>
+                <div class="meta-value">
+                    <div class="meta-value-label">Progresso</div>
+                    <div class="meta-value-number">${pct.toFixed(1)}%</div>
+                </div>
+            </div>
+            <div class="meta-progress">
+                <div class="meta-progress-fill" style="width:${pct}%">
+                    ${pct > 10 ? `<div class="meta-progress-text">${pct.toFixed(0)}%</div>` : ''}
+                </div>
+            </div>
+        </div>
+    `;
+}
 
 function renderFunnel(t) {
     const container = document.getElementById('funnelContainer');
